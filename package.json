@@ -1,0 +1,17 @@
+{
+  "name": "interview-practice",
+  "version": "1.0.0",
+  "description": "Interview question practice problems",
+  "main": "index.js",
+  "scripts": {
+    "q1": "node 1-longest-substring/index.js",
+    "q2": "node 2-factorial/index.js",
+    "q3": "node 3-anagram-strings/index.js",
+    "q4": "node 4-two-sums/index.js",
+    "q5": "node 5-ping-api/index.js",
+    "q6": "node 6-agent-task-assignment/index.js"
+  },
+  "keywords": ["interview", "practice", "algorithms"],
+  "author": "",
+  "license": "ISC"
+}
