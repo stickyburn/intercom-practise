@@ -1,30 +1,32 @@
 /*
-QUESTION: Implement a function to find the longest substring without repeating characters.
+QUESTION: Longest Substring Without Repeating Characters (LeetCode 3)
 
-CLARIFICATION QUESTIONS TO ASK:
-1. What should be returned if the input string is empty? (Return 0 or empty string?)
-2. Should I return the length of the longest substring or the substring itself?
-3. Are we considering case sensitivity? (Is 'a' different from 'A'?)
-4. What about Unicode characters? Should we handle multi-byte characters?
-5. What's the expected time complexity for this solution?
-6. Are there any constraints on the input size?
+Given a string s, return the length of the longest substring without repeating characters.
 
-FOLLOW-UP QUESTIONS & BEST ANSWERS:
-1. Q: Can you optimize the space complexity?
-   A: The sliding window approach already uses O(min(n, m)) space where m is the character set size. 
-      If we know the character set is limited (e.g., only ASCII), we can use a fixed-size array instead of a hash map.
+EXAMPLES
+1) s = "abcabcbb"  ->  3  (longest substring: "abc")
+2) s = "bbbbb"     ->  1  (longest substring: "b")
+3) s = "pwwkew"    ->  3  (longest substrings: "wke" or "kew")
+4) s = ""          ->  0
 
-2. Q: What if the input contains spaces or special characters?
-   A: The solution handles all characters uniformly. Spaces and special characters are treated like any other character.
+CLARIFYING QUESTIONS TO ASK (SENIOR PRODUCT ENGINEER)
+1. What are the input constraints? (Max length of s, character set limitations: ASCII vs full Unicode?)
+2. Do you want the length only, the substring itself, or both? (I’ll start with length and can extend to return the substring.)
+3. How should we handle edge cases like empty strings, null/undefined, or whitespace-only input?
+4. Are we optimizing purely for time (latency) or also for memory, given typical production traffic?
+5. Is this expected to be a pure function (no side effects) that can safely run in a hot path?
 
-3. Q: Can you solve this without using extra data structures?
-   A: We could use a brute-force O(n²) approach with nested loops, but this would be less efficient than the sliding window approach.
+BEST APPROACH TO LEAD WITH
+- Sliding window with a hash map (`Map`) to track the last index of each character.
+- Time: O(n), Space: O(min(n, m)) where m is the character set size.
+- Implemented as `lengthOfLongestSubstring` (Solution 1) — this is the version I would code first in the interview.
 
-4. Q: How would you modify this to return all longest substrings if there are multiple?
-   A: We can track all substrings of maximum length in an array during the sliding window process.
-
-5. Q: What's the time and space complexity of your solution?
-   A: Time: O(n) where n is the length of the string. Space: O(min(n, m)) where m is the size of the character set.
+OTHER APPROACHES TO DISCUSS / IMPLEMENT IF ASKED
+- Brute force: O(n²) with nested loops and a per-start-index set (good to mention as a baseline, not to implement first).
+- ASCII-optimized: fixed-size array instead of `Map` (`lengthOfLongestSubstringOptimized`).
+- Variants that:
+  - Return the actual substring (`longestSubstring`).
+  - Use a more functional style (`lengthOfLongestSubstringFunctional`, `lengthOfLongestSubstringComposed`, `lengthOfLongestSubstringPipeline`).
 */
 
 // SOLUTION 1: Sliding Window with Hash Map (Efficient - O(n) time, O(min(n,m)) space)
@@ -103,6 +105,87 @@ function longestSubstring(s) {
     
     return longestSubstr;
 }
+
+// SOLUTION 4: Functional Programming with Reduce (Declarative approach)
+const lengthOfLongestSubstringFunctional = (s) => {
+    if (typeof s !== 'string') {
+        throw new Error("Input must be a string");
+    }
+    
+    return s.split('').reduce((acc, char, index) => {
+        const charIndex = acc.charMap.get(char);
+        
+        if (charIndex >= acc.left) {
+            acc.left = charIndex + 1;
+        }
+        
+        acc.charMap.set(char, index);
+        acc.maxLength = Math.max(acc.maxLength, index - acc.left + 1);
+        
+        return acc;
+    }, { left: 0, maxLength: 0, charMap: new Map() }).maxLength;
+};
+
+// SOLUTION 5: Functional with Composition (Composable functions)
+const createCharMap = () => new Map();
+
+const updateWindow = (state, char, index) => {
+    const charIndex = state.charMap.get(char);
+    const newLeft = charIndex >= state.left ? charIndex + 1 : state.left;
+    
+    return {
+        left: newLeft,
+        maxLength: Math.max(state.maxLength, index - newLeft + 1),
+        charMap: new Map(state.charMap).set(char, index)
+    };
+};
+
+const lengthOfLongestSubstringComposed = (s) => {
+    if (typeof s !== 'string') {
+        throw new Error("Input must be a string");
+    }
+    
+    const initialState = { left: 0, maxLength: 0, charMap: createCharMap() };
+    
+    return s.split('').reduce((state, char, index) =>
+        updateWindow(state, char, index), initialState
+    ).maxLength;
+};
+
+// SOLUTION 6: Functional Pipeline with Early Termination
+const lengthOfLongestSubstringPipeline = (s) => {
+    if (typeof s !== 'string') {
+        throw new Error("Input must be a string");
+    }
+    
+    const validateString = (str) => {
+        if (str.length === 0) return { valid: true, result: 0 };
+        return { valid: true, result: null };
+    };
+    
+    const processString = (str) => {
+        const charMap = new Map();
+        let left = 0;
+        let maxLength = 0;
+        
+        for (let right = 0; right < str.length; right++) {
+            const char = str[right];
+            const charIndex = charMap.get(char);
+            
+            if (charIndex >= left) {
+                left = charIndex + 1;
+            }
+            
+            charMap.set(char, right);
+            maxLength = Math.max(maxLength, right - left + 1);
+        }
+        
+        return maxLength;
+    };
+    
+    const validation = validateString(s);
+    return validation.result !== null ? validation.result : processString(s);
+};
 
 // Test cases
 function runTests() {
